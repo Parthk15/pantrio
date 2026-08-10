@@ -14,6 +14,19 @@ class Inventory:
                 "price": item["price"]
             }
 
+    def get_low_stock(self, thresholds):
+        low_stock = {}
+
+        for name, item in self.items.items():
+            if name in thresholds:
+                if item["quantity"] <= thresholds[name]:
+                    low_stock[name] = {
+                        "quantity": item["quantity"],
+                        "unit": item["unit"]
+                    }
+
+        return low_stock
+
     def show_inventory(self):
         print("\n========== PANTRIO INVENTORY ==========\n")
 
@@ -28,6 +41,7 @@ class Inventory:
 
 
 if __name__ == "__main__":
+
     inventory = Inventory()
 
     inventory.add_item({
@@ -52,3 +66,25 @@ if __name__ == "__main__":
     })
 
     inventory.show_inventory()
+
+    thresholds = {
+        "Tomato": 0.5,
+        "Rice": 2.0,
+        "Milk": 1.0,
+        "Onion": 1.0
+    }
+
+    low_stock = inventory.get_low_stock(thresholds)
+
+    print("\n========== LOW STOCK ==========\n")
+
+    if low_stock:
+        for name, item in low_stock.items():
+            print(
+                f"{name}: "
+                f"{item['quantity']} {item['unit']}"
+            )
+    else:
+        print("No low-stock items.")
+
+    print("\n===============================\n")
