@@ -1,3 +1,4 @@
+
 import re
 
 
@@ -126,11 +127,53 @@ def parse_bill_text(text):
 
     items = []
 
-    for line in text.splitlines():
+    lines = [
+        line.strip()
+        for line in text.splitlines()
+        if line.strip()
+    ]
+
+    i = 0
+
+    while i < len(lines):
+        line = lines[i]
+
+        # Format 1:
+        # TOMATO 1 KG 45.00
         item = parse_bill_line(line)
 
         if item:
             items.append(item)
+            i += 1
+            continue
+
+        # Format 2:
+        # # Tomatoes
+        # 9.90
+        if line.startswith("#"):
+            item_name = normalize_item_name(
+                line.lstrip("#").strip()
+            )
+
+            if i + 1 < len(lines):
+                price_match = re.fullmatch(
+                    r"(?:₹|Rs\.?|INR)?\s*(\d+(?:\.\d+)?)",
+                    lines[i + 1],
+                    re.IGNORECASE
+                )
+
+                if price_match and item_name:
+                    items.append({
+                        "name": item_name,
+                        "quantity": 1.0,
+                        "unit": "piece",
+                        "price": float(price_match.group(1))
+                    })
+
+                    i += 2
+                    continue
+
+        i += 1
 
     return {
         "items": items
@@ -144,6 +187,12 @@ if __name__ == "__main__":
     RICE 5 KG 320.00
     ONION 2 KG 80.00
     MILK 2 L 120.00
+
+    # Apples
+    100.00
+
+    # Bread
+    40.00
     """
 
     result = parse_bill_text(sample_text)
