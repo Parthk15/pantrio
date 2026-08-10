@@ -48,6 +48,37 @@ def find_recipes(inventory):
     return possible_recipes
 
 
+def consume_recipe(inventory, recipe_name):
+    if recipe_name not in RECIPES:
+        print(f"Recipe '{recipe_name}' not found.")
+        return False
+
+    recipe = RECIPES[recipe_name]
+
+    # Check ingredients first
+    for ingredient, required_quantity in recipe["ingredients"].items():
+
+        if ingredient not in inventory.items:
+            print(f"Missing ingredient: {ingredient}")
+            return False
+
+        available_quantity = inventory.items[ingredient]["quantity"]
+
+        if available_quantity < required_quantity:
+            print(
+                f"Not enough {ingredient}. "
+                f"Available: {available_quantity}, "
+                f"Required: {required_quantity}"
+            )
+            return False
+
+    # Consume ingredients
+    for ingredient, required_quantity in recipe["ingredients"].items():
+        inventory.items[ingredient]["quantity"] -= required_quantity
+
+    return True
+
+
 if __name__ == "__main__":
     from inventory import Inventory
 
@@ -82,3 +113,12 @@ if __name__ == "__main__":
         print(recipe)
 
     print("\n=====================================\n")
+
+    print("Making Tomato Rice...\n")
+
+    success = consume_recipe(inventory, "Tomato Rice")
+
+    if success:
+        print("Recipe completed successfully!")
+
+    inventory.show_inventory()
