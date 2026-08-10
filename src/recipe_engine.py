@@ -20,6 +20,13 @@ RECIPES = {
             "Tomato": 0.5,
             "Onion": 0.25
         }
+    },
+
+    "Milk Rice": {
+        "ingredients": {
+            "Rice": 1.0,
+            "Milk": 0.5
+        }
     }
 }
 
@@ -49,6 +56,7 @@ def find_recipes(inventory):
 
 
 def consume_recipe(inventory, recipe_name):
+
     if recipe_name not in RECIPES:
         print(f"Recipe '{recipe_name}' not found.")
         return False
@@ -77,48 +85,3 @@ def consume_recipe(inventory, recipe_name):
         inventory.items[ingredient]["quantity"] -= required_quantity
 
     return True
-
-
-if __name__ == "__main__":
-    from inventory import Inventory
-
-    inventory = Inventory()
-
-    inventory.add_item({
-        "name": "Tomato",
-        "quantity": 1.0,
-        "unit": "kg",
-        "price": 45.0
-    })
-
-    inventory.add_item({
-        "name": "Rice",
-        "quantity": 5.0,
-        "unit": "kg",
-        "price": 320.0
-    })
-
-    inventory.add_item({
-        "name": "Onion",
-        "quantity": 2.0,
-        "unit": "kg",
-        "price": 80.0
-    })
-
-    recipes = find_recipes(inventory)
-
-    print("\n========== PANTRIO RECIPES ==========\n")
-
-    for recipe in recipes:
-        print(recipe)
-
-    print("\n=====================================\n")
-
-    print("Making Tomato Rice...\n")
-
-    success = consume_recipe(inventory, "Tomato Rice")
-
-    if success:
-        print("Recipe completed successfully!")
-
-    inventory.show_inventory()

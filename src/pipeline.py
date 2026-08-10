@@ -2,6 +2,7 @@ from bill_parser import parse_bill_text
 from inventory import Inventory
 from recipe_suggester import suggest_recipes
 from recipe_engine import consume_recipe
+from purchase_suggester import suggest_purchases
 
 
 sample_text = """
@@ -43,13 +44,20 @@ print("\n========== RECIPE SUGGESTIONS ==========\n")
 available_recipes = []
 
 for suggestion in suggestions:
+
     if suggestion["can_make"]:
-        available_recipes.append(suggestion["recipe"])
+
+        available_recipes.append(
+            suggestion["recipe"]
+        )
+
         print(
             f"{len(available_recipes)}. "
             f"{suggestion['recipe']}"
         )
+
     else:
+
         print(
             f"⚠️ {suggestion['recipe']} "
             f"(Missing: {', '.join(suggestion['missing'])})"
@@ -71,9 +79,13 @@ if available_recipes:
 
         if 1 <= choice <= len(available_recipes):
 
-            selected_recipe = available_recipes[choice - 1]
+            selected_recipe = available_recipes[
+                choice - 1
+            ]
 
-            print(f"\nMaking {selected_recipe}...\n")
+            print(
+                f"\nMaking {selected_recipe}...\n"
+            )
 
 
             # Step 7: Consume ingredients
@@ -97,7 +109,7 @@ if available_recipes:
                 inventory.show_inventory()
 
 
-                # Step 8: Check low stock after cooking
+                # Step 8: Low-stock thresholds
                 thresholds = {
                     "Tomato": 0.5,
                     "Rice": 1.0,
@@ -107,6 +119,8 @@ if available_recipes:
                     "Bread": 1.0
                 }
 
+
+                # Step 9: Check low stock
                 low_stock = inventory.get_low_stock(
                     thresholds
                 )
@@ -131,6 +145,39 @@ if available_recipes:
 
                 print(
                     "\n==============================================\n"
+                )
+
+
+                # Step 10: Purchase suggestions
+                purchases = suggest_purchases(
+                    inventory,
+                    thresholds
+                )
+
+                print(
+                    "\n========== PURCHASE SUGGESTIONS ==========\n"
+                )
+
+                if purchases:
+
+                    for item in purchases:
+
+                        print(
+                            f"🛒 Buy more {item['name']}"
+                        )
+
+                        print(
+                            f"   Suggested quantity: "
+                            f"{item['suggested_quantity']} "
+                            f"{item['unit']}"
+                        )
+
+                else:
+
+                    print("No purchases needed.")
+
+                print(
+                    "\n===========================================\n"
                 )
 
         else:
