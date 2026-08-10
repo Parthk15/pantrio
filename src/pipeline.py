@@ -45,7 +45,10 @@ available_recipes = []
 for suggestion in suggestions:
     if suggestion["can_make"]:
         available_recipes.append(suggestion["recipe"])
-        print(f"{len(available_recipes)}. {suggestion['recipe']}")
+        print(
+            f"{len(available_recipes)}. "
+            f"{suggestion['recipe']}"
+        )
     else:
         print(
             f"⚠️ {suggestion['recipe']} "
@@ -59,7 +62,7 @@ print("\n=========================================\n")
 if available_recipes:
 
     print("Choose a recipe to make:")
-    
+
     choice = input("Enter recipe number: ").strip()
 
     if choice.isdigit():
@@ -72,13 +75,16 @@ if available_recipes:
 
             print(f"\nMaking {selected_recipe}...\n")
 
+
             # Step 7: Consume ingredients
             success = consume_recipe(
                 inventory,
                 selected_recipe
             )
 
+
             if success:
+
                 print(
                     f"✅ {selected_recipe} "
                     "completed successfully!"
@@ -90,11 +96,54 @@ if available_recipes:
 
                 inventory.show_inventory()
 
+
+                # Step 8: Check low stock after cooking
+                thresholds = {
+                    "Tomato": 0.5,
+                    "Rice": 1.0,
+                    "Onion": 0.5,
+                    "Milk": 1.0,
+                    "Apples": 2.0,
+                    "Bread": 1.0
+                }
+
+                low_stock = inventory.get_low_stock(
+                    thresholds
+                )
+
+                print(
+                    "\n========== LOW STOCK AFTER COOKING ==========\n"
+                )
+
+                if low_stock:
+
+                    for name, item in low_stock.items():
+
+                        print(
+                            f"⚠️ {name}: "
+                            f"{item['quantity']} "
+                            f"{item['unit']}"
+                        )
+
+                else:
+
+                    print("No low-stock items.")
+
+                print(
+                    "\n==============================================\n"
+                )
+
         else:
+
             print("Invalid recipe number.")
 
     else:
+
         print("Please enter a valid number.")
 
 else:
-    print("No recipes can be made with the current inventory.")
+
+    print(
+        "No recipes can be made "
+        "with the current inventory."
+    )
