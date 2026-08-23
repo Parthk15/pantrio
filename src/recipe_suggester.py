@@ -1,34 +1,15 @@
-RECIPES = {
-    "Tomato Rice": {
-        "Tomato": 0.5,
-        "Rice": 1.0,
-        "Onion": 0.5
-    },
-
-    "Fried Rice": {
-        "Rice": 1.0,
-        "Onion": 0.5
-    },
-
-    "Tomato Soup": {
-        "Tomato": 0.5,
-        "Onion": 0.25
-    },
-
-    "Milk Rice": {
-        "Rice": 0.5,
-        "Milk": 0.5
-    }
-}
+from recipe_engine import RECIPES
 
 
 def suggest_recipes(inventory):
     suggestions = []
 
-    for recipe_name, ingredients in RECIPES.items():
+    for recipe_name, recipe_data in RECIPES.items():
 
         can_make = True
         missing = []
+
+        ingredients = recipe_data.get("ingredients", recipe_data)
 
         for ingredient, required_quantity in ingredients.items():
 

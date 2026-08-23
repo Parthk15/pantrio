@@ -44,6 +44,16 @@ def normalize_unit(unit):
     return UNITS.get(unit, unit)
 
 
+NAME_MAPPINGS = {
+    "Tomatoes": "Tomato",
+    "Onions": "Onion",
+    "Milks": "Milk",
+    "Rices": "Rice",
+    "Spinach": "Spinach",
+    "Yogurt": "Yogurt"
+}
+
+
 def normalize_item_name(name):
     """Clean and standardize an item name."""
     name = name.strip()
@@ -55,7 +65,8 @@ def normalize_item_name(name):
     name = name.strip("-:.,/")
 
     # Basic capitalization
-    return name.title()
+    title_name = name.title()
+    return NAME_MAPPINGS.get(title_name, title_name)
 
 
 def parse_bill_line(line):
