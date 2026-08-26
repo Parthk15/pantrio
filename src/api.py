@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 
 # Ensure src directory is in Python path
 src_dir = os.path.dirname(os.path.abspath(__file__))
@@ -38,6 +39,7 @@ def root():
 @app.post("/api/scan-bill")
 async def scan_bill(file: UploadFile = File(...)):
 
+    start_req = time.perf_counter()
     suffix = os.path.splitext(file.filename)[1]
 
     with tempfile.NamedTemporaryFile(
@@ -48,8 +50,12 @@ async def scan_bill(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, temp_file)
         temp_path = temp_file.name
 
+    save_time = time.perf_counter() - start_req
+
     try:
+        t_ocr_start = time.perf_counter()
         ocr_result = extract_text(temp_path)
+        ocr_duration = time.perf_counter() - t_ocr_start
 
         if not ocr_result:
             return {
@@ -60,7 +66,12 @@ async def scan_bill(file: UploadFile = File(...)):
 
         ocr_text = "\n".join(ocr_result)
 
+        t_parse_start = time.perf_counter()
         result = parse_bill_text(ocr_text)
+        parse_duration = time.perf_counter() - t_parse_start
+
+        total_duration = time.perf_counter() - start_req
+        print(f"[PROFILE] Upload Save: {save_time:.4f}s | OCR: {ocr_duration:.4f}s | Parser: {parse_duration:.4f}s | Total API: {total_duration:.4f}s")
 
         return {
             "success": True,

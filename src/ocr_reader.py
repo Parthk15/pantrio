@@ -1,4 +1,5 @@
 import os
+import time
 
 # Disable oneDNN to prevent C++ executor crashes on Windows CPU
 os.environ["FLAGS_use_onednn"] = "0"
@@ -31,7 +32,10 @@ def extract_text(image_path):
     ocr = get_ocr_engine()
     if ocr:
         try:
+            start_time = time.perf_counter()
             result = ocr.predict(image_path)
+            elapsed = time.perf_counter() - start_time
+            print(f"[PROFILE] OCR text extraction took {elapsed:.4f}s")
 
             print("========== RAW OCR ==========")
             print(result)
