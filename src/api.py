@@ -13,11 +13,19 @@ import tempfile
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 
-from ocr_reader import extract_text
+from ocr_reader import extract_text, get_ocr_engine
 from bill_parser import parse_bill_text
 
 
 app = FastAPI(title="Pantrio API")
+
+
+@app.on_event("startup")
+def startup_event():
+    """Warm up OCR model engine on server startup."""
+    print("[PANTRIO] Warming up PaddleOCR engine...")
+    get_ocr_engine()
+    print("[PANTRIO] OCR engine ready.")
 
 
 app.add_middleware(

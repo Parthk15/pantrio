@@ -5,6 +5,7 @@ import time
 os.environ["FLAGS_use_onednn"] = "0"
 os.environ["FLAGS_use_mkldnn"] = "0"
 
+from PIL import Image
 from paddleocr import PaddleOCR
 
 _ocr_engine = None
@@ -16,12 +17,35 @@ def get_ocr_engine():
         try:
             _ocr_engine = PaddleOCR(
                 lang="en",
-                enable_mkldnn=False
+                enable_mkldnn=False,
+                use_doc_orientation_classify=False,
+                use_doc_unwarping=False,
+                use_textline_orientation=False
             )
         except Exception as e:
             print(f"Warning initializing PaddleOCR: {e}")
             _ocr_engine = False
     return _ocr_engine
+
+
+def preprocess_image(image_path, max_dim=1200):
+    """Resize high-resolution bill photos to speed up CPU OCR detection."""
+    try:
+        with Image.open(image_path) as img:
+            w, h = img.size
+            if max(w, h) <= max_dim:
+                return image_path, False
+            
+            scale = max_dim / float(max(w, h))
+            new_w, new_h = max(1, int(w * scale)), max(1, int(h * scale))
+            resized = img.resize((new_w, new_h), Image.Resampling.LANCZOS)
+            
+            temp_path = image_path + ".opt.jpg"
+            resized.convert("RGB").save(temp_path, "JPEG", quality=90)
+            return temp_path, True
+    except Exception as e:
+        print(f"Image preprocessing skipped: {e}")
+        return image_path, False
 
 
 def extract_text(image_path):
@@ -31,9 +55,10 @@ def extract_text(image_path):
 
     ocr = get_ocr_engine()
     if ocr:
+        temp_scaled_path, created_temp = preprocess_image(image_path)
         try:
             start_time = time.perf_counter()
-            result = ocr.predict(image_path)
+            result = ocr.predict(temp_scaled_path)
             elapsed = time.perf_counter() - start_time
             print(f"[PROFILE] OCR text extraction took {elapsed:.4f}s")
 
@@ -52,6 +77,9 @@ def extract_text(image_path):
                         return texts
         except Exception as e:
             print(f"OCR prediction failed: {e}")
+        finally:
+            if created_temp and os.path.exists(temp_scaled_path):
+                os.remove(temp_scaled_path)
 
     # Fallback sample bill text if OCR fails
     print("Using standard bill data fallback...")
