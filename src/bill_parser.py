@@ -1,6 +1,5 @@
 import re
 
-
 # Units that Pantrio understands
 UNITS = {
     "kg": "kg",
@@ -43,19 +42,45 @@ NAME_MAPPINGS = {
     "Milks": "Milk",
     "Rices": "Rice",
     "Spinach": "Spinach",
-    "Yogurt": "Yogurt"
+    "Yogurt": "Yogurt",
+    "Fortune Sunflwr Oil": "Fortune Sunflower Oil",
+    "Kellogg's CornFlakes": "Kellogg's Cornflakes",
+    "Kelloggs Cornflakes": "Kellogg's Cornflakes"
 }
 
 
 def normalize_item_name(name):
-    """Clean and standardize an item name."""
+    """Clean and standardize an item name without over-normalizing brands."""
     name = name.strip()
     name = re.sub(r"\s+", " ", name)
-    name = name.strip("-:.,/")
+    name = name.strip("-:.,/# ")
 
-    title_name = name.title()
+    if name in NAME_MAPPINGS:
+        return NAME_MAPPINGS[name]
 
+    # Preserve brand case if already present, otherwise title case
+    title_name = name.title() if not any(c.isupper() for c in name[1:]) else name
     return NAME_MAPPINGS.get(title_name, title_name)
+
+
+CATEGORIES = [
+    ("Dairy", ["milk", "yogurt", "curd", "dahi", "butter", "cheese", "paneer", "cream"]),
+    ("Produce", ["tomato", "tomatoes", "onion", "onions", "potato", "potatoes", "spinach", "garlic", "ginger", "apple", "apples", "banana", "cucumber", "cabbage", "veg", "fruit"]),
+    ("Pantry", ["atta", "flour", "rice", "salt", "sugar", "oil", "sunflower", "dal", "pulses", "spice", "honey", "mustard", "bread"]),
+    ("Grocery", ["cornflakes", "cereal", "oats", "pasta", "noodl", "sauce", "ketchup", "soup"]),
+    ("Beverages", ["tea", "coffee", "juice", "soda", "drink", "water"]),
+    ("Snacks", ["biscuit", "chip", "cookie", "namkeen", "wafer", "snack"]),
+    ("Frozen", ["ice cream", "frozen", "peas"])
+]
+
+
+def classify_category(item_name):
+    """Assign a sensible grocery category to a detected item name."""
+    name_lower = item_name.lower()
+    for cat_name, keywords in CATEGORIES:
+        if any(kw in name_lower for kw in keywords):
+            return cat_name
+    return "Other"
 
 
 def extract_quantity_unit(text):
@@ -94,47 +119,8 @@ def extract_price(text):
     return float(matches[-1])
 
 
-def parse_bill_line(line):
-    """
-    Parse a complete item line.
-
-    Example:
-        TOMATO 1 KG 45.00
-    """
-    line = line.strip()
-
-    if not line:
-        return None
-
-    quantity_info = extract_quantity_unit(line)
-
-    if not quantity_info:
-        return None
-
-    quantity = quantity_info["quantity"]
-    unit = quantity_info["unit"]
-
-    # Text before quantity is the item name
-    item_name = line[:quantity_info["start"]].strip()
-
-    # Price after quantity/unit
-    remaining_text = line[quantity_info["end"]:]
-
-    price = extract_price(remaining_text)
-
-    if not item_name:
-        return None
-
-    return {
-        "name": normalize_item_name(item_name),
-        "quantity": quantity,
-        "unit": unit,
-        "price": price
-    }
-
-
-def looks_like_item_name(line):
-    """Determine whether a line looks like a grocery item name."""
+def looks_like_header_or_footer(line):
+    """Determine whether a line looks like header, metadata, or summary noise."""
     lower = line.lower()
 
     ignored_words = [
@@ -153,19 +139,28 @@ def looks_like_item_name(line):
         "items:",
         "qty:",
         "thank you",
-        "pantrio"
+        "pantrio",
+        "rate",
+        "amount",
+        "total",
+        "cash receipt",
+        "manager",
+        "cashier",
+        "tax"
     ]
 
     if any(word in lower for word in ignored_words):
-        return False
+        return True
 
-    # Must contain letters
-    return bool(re.search(r"[A-Za-z]", line))
+    return not bool(re.search(r"[A-Za-z]", line))
 
 
 def parse_bill_text(text):
-    """Parse OCR text from a grocery bill."""
-
+    """
+    Parse OCR text from a grocery bill.
+    Extracts name, quantity, unit, and category (prices ignored for Pantrio).
+    Supports single-line and multi-line Indian grocery receipt layouts.
+    """
     items = []
 
     lines = [
@@ -179,95 +174,61 @@ def parse_bill_text(text):
     while i < len(lines):
         line = lines[i]
 
-        # Ignore headers and bill summary information
-        lower = line.lower()
-
-        if any(keyword in lower for keyword in [
-            "freshmart",
-            "nagpur",
-            "gstin",
-            "bill no",
-            "date:",
-            "time:",
-            "item name",
-            "subtotal",
-            "sgst",
-            "cgst",
-            "total gst",
-            "grand total",
-            "items:",
-            "qty:",
-            "thank you",
-            "pantrio"
-        ]):
+        if looks_like_header_or_footer(line):
             i += 1
             continue
 
-        # ---------------------------------------------------------
-        # FORMAT 1
-        # TOMATO 1 KG 45.00
-        # ---------------------------------------------------------
-        item = parse_bill_line(line)
+        q_info = extract_quantity_unit(line)
 
-        if item:
-            items.append(item)
-            i += 1
-            continue
+        if q_info:
+            item_name = line[:q_info["start"]].strip()
 
-        # ---------------------------------------------------------
-        # FORMAT 2
-        #
-        # Tomato 1 kg
-        # 42.00
-        # 42.00
-        #
-        # The first number is rate.
-        # The second number is line amount.
-        # ---------------------------------------------------------
-        quantity_info = extract_quantity_unit(line)
-
-        if quantity_info and looks_like_item_name(line):
-
-            item_name = line[:quantity_info["start"]].strip()
-
-            quantity = quantity_info["quantity"]
-            unit = quantity_info["unit"]
-
-            price = None
-
-            # Look at next two lines for monetary values
-            future_prices = []
-
-            for offset in range(1, 3):
-                if i + offset < len(lines):
-                    candidate = lines[i + offset]
-
-                    # Only accept lines that are basically numbers
-                    if re.fullmatch(
-                        r"(?:₹|Rs\.?|INR)?\s*\d+(?:\.\d{1,2})?",
-                        candidate,
-                        re.IGNORECASE
-                    ):
-                        future_prices.append(float(extract_price(candidate)))
-
-            if future_prices:
-                # For bills like:
-                # Tomato 1 kg
-                # 42.00
-                # 42.00
-                #
-                # The final amount is the item price.
-                price = future_prices[-1]
+            # If no item name before quantity on current line, check previous line
+            if not item_name and i > 0 and not looks_like_header_or_footer(lines[i - 1]):
+                item_name = lines[i - 1].strip()
 
             if item_name:
+                unit_qty = q_info["quantity"]
+                unit = q_info["unit"]
+                multiplier = 1.0
+                price = None
+
+                # Check trailing text on current line (e.g. "1 48.00" in "Mother Dairy Yogurt 400g 1 48.00")
+                trailing = line[q_info["end"]:].strip()
+                m_trail = re.search(r"^(\d+)\s+(?:\d+(?:\.\d{1,2})?)", trailing)
+
+                # Check next line for count multiplier (e.g. "2 68.00" or "1 285.00")
+                m_next = None
+                if i + 1 < len(lines):
+                    m_next = re.search(r"^(\d+)\s+(?:\d+(?:\.\d{1,2})?)", lines[i + 1])
+
+                if m_trail:
+                    multiplier = float(m_trail.group(1))
+                    price = extract_price(trailing)
+                elif m_next:
+                    multiplier = float(m_next.group(1))
+                    price = extract_price(lines[i + 1])
+                    i += 1  # consume multiplier line
+                elif trailing:
+                    price = extract_price(trailing)
+
+                final_qty = unit_qty * multiplier
+                norm_name = normalize_item_name(item_name)
+                category = classify_category(norm_name)
+
                 items.append({
-                    "name": normalize_item_name(item_name),
-                    "quantity": quantity,
+                    "name": norm_name,
+                    "quantity": final_qty,
                     "unit": unit,
+                    "category": category,
                     "price": price
                 })
 
                 i += 1
+
+                # Consume subsequent standalone price lines (e.g., "136.00" or "42.00")
+                while i < len(lines) and re.fullmatch(r"(?:₹|Rs\.?|INR)?\s*\d+(?:\.\d{1,2})?", lines[i], re.IGNORECASE):
+                    i += 1
                 continue
 
         i += 1
@@ -342,13 +303,7 @@ if __name__ == "__main__":
 
     print("\n========== PANTRIO PARSER ==========\n")
 
-    total = 0
-
     for item in result["items"]:
         print(item)
 
-        if item["price"] is not None:
-            total += item["price"]
-
-    print(f"\nParsed item total: ₹{total:.2f}")
     print("\n====================================\n")
