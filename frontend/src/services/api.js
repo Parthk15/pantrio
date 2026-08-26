@@ -34,13 +34,13 @@ export class PantrioApiError extends Error {
  */
 export async function scanBill(file, onProgress) {
   if (!file) {
-    throw new PantrioApiError('No file was provided.', { kind: 'invalid_file' })
+    throw new PantrioApiError('Please upload a clear grocery bill image.', { kind: 'invalid_file' })
   }
 
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
   if (file.type && !allowedTypes.includes(file.type)) {
     throw new PantrioApiError(
-      'That file doesn\u2019t look like a supported image. Try a JPG, PNG, WEBP, or HEIC photo of your bill.',
+      'Please upload a clear grocery bill image.',
       { kind: 'invalid_file' }
     )
   }
@@ -62,7 +62,7 @@ export async function scanBill(file, onProgress) {
 
     if (!data || data.success === false) {
       throw new PantrioApiError(
-        data?.message || 'No grocery items could be read from that bill.',
+        data?.message || 'Pantrio couldn\u2019t process this bill.',
         { kind: 'empty' }
       )
     }
@@ -80,21 +80,21 @@ export async function scanBill(file, onProgress) {
 
     if (err.code === 'ECONNABORTED') {
       throw new PantrioApiError(
-        'The scan took too long and timed out. Please try again.',
-        { kind: 'network', cause: err }
+        'Scanning is taking longer than expected. Please try again.',
+        { kind: 'timeout', cause: err }
       )
     }
 
     if (err.response) {
       throw new PantrioApiError(
-        err.response.data?.detail || err.response.data?.message || 'The server had trouble reading that bill.',
+        err.response.data?.detail || err.response.data?.message || 'Pantrio couldn\u2019t process this bill.',
         { kind: 'server', status: err.response.status, cause: err }
       )
     }
 
     if (err.request) {
       throw new PantrioApiError(
-        'Pantrio\u2019s backend isn\u2019t reachable. Make sure the FastAPI server is running at ' + API_BASE_URL + '.',
+        'Pantrio backend is unreachable.',
         { kind: 'network', cause: err }
       )
     }

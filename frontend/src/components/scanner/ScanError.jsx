@@ -5,18 +5,23 @@ import Button from '@/components/ui/Button'
 const KIND_META = {
   network: {
     icon: WifiOff,
-    title: 'Can\u2019t reach the Pantrio backend',
-    hint: 'Make sure the FastAPI server is running locally, then try again.',
+    title: 'Pantrio backend is unreachable.',
+    hint: 'Make sure the FastAPI backend is running at http://127.0.0.1:8000.',
+  },
+  timeout: {
+    icon: ScanLine,
+    title: 'Scan timed out',
+    hint: 'Scanning is taking longer than expected. Please try again.',
   },
   server: {
     icon: ServerCrash,
-    title: 'The server hit a snag',
-    hint: 'Something went wrong while reading your bill.',
+    title: 'Pantrio couldn\u2019t process this bill.',
+    hint: 'An unexpected server error occurred during bill processing.',
   },
   invalid_file: {
     icon: FileWarning,
-    title: 'That file won\u2019t work',
-    hint: 'Try a clear photo of your bill in JPG, PNG, or WEBP.',
+    title: 'Please upload a clear grocery bill image.',
+    hint: 'Supported formats: JPG, PNG, WEBP, HEIC.',
   },
   empty: {
     icon: ScanLine,
