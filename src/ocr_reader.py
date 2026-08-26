@@ -32,6 +32,10 @@ def extract_text(image_path):
     if ocr:
         try:
             result = ocr.predict(image_path)
+
+            print("========== RAW OCR ==========")
+            print(result)
+            print("=============================")
             if result and len(result) > 0:
                 if isinstance(result[0], dict) and "rec_texts" in result[0]:
                     return result[0]["rec_texts"]

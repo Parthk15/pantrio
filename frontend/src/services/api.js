@@ -6,7 +6,7 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:80
 
 const client = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 100000, // OCR can take a few seconds on first run (model warm-up)
+  timeout: 180000, // OCR can take a few seconds on first run (model warm-up)
 })
 
 /**
