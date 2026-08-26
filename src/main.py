@@ -36,7 +36,9 @@ def main():
     # Step 2: Run OCR on the bill
     print("\nReading bill...\n")
 
-    ocr_result = extract_text(image_path)
+    print(">>> OCR START")
+    ocr_result = extract_text(temp_path)
+    print(">>> OCR END")
 
     if not ocr_result:
         print("No text detected from the bill.")
