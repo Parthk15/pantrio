@@ -7,11 +7,14 @@ class Inventory:
 
         if name in self.items:
             self.items[name]["quantity"] += item["quantity"]
+            if "category" in item and item["category"]:
+                self.items[name]["category"] = item["category"]
         else:
             self.items[name] = {
                 "quantity": item["quantity"],
                 "unit": item["unit"],
-                "price": item["price"]
+                "category": item.get("category", "Other"),
+                "price": item.get("price")
             }
 
     def get_low_stock(self, thresholds):
@@ -31,10 +34,10 @@ class Inventory:
         print("\n========== PANTRIO INVENTORY ==========\n")
 
         for name, item in self.items.items():
+            cat_str = f" [{item['category']}]" if "category" in item else ""
             print(
-                f"{name}: "
-                f"{item['quantity']} {item['unit']} "
-                f"(₹{item['price']})"
+                f"{name}{cat_str}: "
+                f"{item['quantity']} {item['unit']}"
             )
 
         print("\n=======================================\n")
