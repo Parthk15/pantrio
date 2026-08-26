@@ -58,8 +58,12 @@ def normalize_item_name(name):
     if name in NAME_MAPPINGS:
         return NAME_MAPPINGS[name]
 
-    # Preserve brand case if already present, otherwise title case
-    title_name = name.title() if not any(c.isupper() for c in name[1:]) else name
+    # Standardize ALL CAPS OCR names like "TOMATO" to "Tomato"
+    if name.isupper():
+        title_name = name.title()
+    else:
+        title_name = name
+
     return NAME_MAPPINGS.get(title_name, title_name)
 
 
