@@ -17,16 +17,18 @@ def get_ocr_engine():
         try:
             _ocr_engine = PaddleOCR(
                 lang="en",
-                enable_mkldnn=False,
+                text_detection_model_name="PP-OCRv5_mobile_det",
+                text_recognition_model_name="en_PP-OCRv5_mobile_rec",
                 use_doc_orientation_classify=False,
                 use_doc_unwarping=False,
-                use_textline_orientation=False
+                use_textline_orientation=False,
+                text_det_limit_side_len=960,
+                text_det_limit_type="max",
             )
         except Exception as e:
             print(f"Warning initializing PaddleOCR: {e}")
             _ocr_engine = False
     return _ocr_engine
-
 
 def preprocess_image(image_path, max_dim=1200):
     """Resize high-resolution bill photos to speed up CPU OCR detection."""
