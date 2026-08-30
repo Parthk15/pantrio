@@ -1,35 +1,28 @@
 import { useMemo } from 'react'
 import { useInventory } from '@/context/InventoryContext'
 import { RECIPES } from '@/data/recipes'
+import { rankRecipes } from '@/utils/recipeMatcher'
 
-// Mirrors src/recipe_suggester.py: for each recipe, checks every required
-// ingredient against the live inventory and reports what's missing/short.
+/**
+ * Dynamically ranks recipes based on current scanned inventory items.
+ * Recalculates immediately when a new bill is scanned or inventory changes.
+ */
 export function useRecipes() {
-  const { items } = useInventory()
+  const { itemList, items } = useInventory()
 
   return useMemo(() => {
-    return RECIPES.map((recipe) => {
-      const missing = []
-      const have = []
+    const ranking = rankRecipes(RECIPES, itemList)
 
-      for (const [ingredient, requiredQty] of Object.entries(recipe.ingredients)) {
-        const stock = items[ingredient]
-        const availableQty = stock?.quantity ?? 0
-
-        if (!stock || availableQty < requiredQty) {
-          missing.push({ ingredient, requiredQty, availableQty })
-        } else {
-          have.push({ ingredient, requiredQty, availableQty })
-        }
-      }
-
-      return {
-        ...recipe,
-        canMake: missing.length === 0,
-        missing,
-        have,
-        matchRatio: have.length / (have.length + missing.length),
-      }
-    }).sort((a, b) => Number(b.canMake) - Number(a.canMake) || b.matchRatio - a.matchRatio)
-  }, [items])
+    return {
+      recipes: ranking.allRanked,
+      canMakeNow: ranking.canMakeNow,
+      almostThere: ranking.almostThere,
+      moreIdeas: ranking.moreIdeas,
+      topSuggestions: ranking.topSuggestions,
+      scannedItems: itemList,
+      hasScannedItems: itemList.length > 0,
+      totalCount: RECIPES.length,
+      readyCount: ranking.canMakeNow.length,
+    }
+  }, [itemList, items])
 }
