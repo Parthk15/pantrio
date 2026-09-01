@@ -36,9 +36,10 @@ describe('Pantrio Recipe Matching Engine', () => {
     const match = matchRecipe(recipe, availableItems)
 
     expect(match).toHaveProperty('matchPercentage')
-    expect(match).toHaveProperty('matchedIngredients')
-    expect(match).toHaveProperty('missingIngredients')
+    expect(match).toHaveProperty('matchedRequired')
+    expect(match).toHaveProperty('missingRequired')
   })
 })
+
 
 
