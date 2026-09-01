@@ -1,13 +1,34 @@
+/**
+ * Formats a monetary number into Indian Rupee currency standard.
+ * @param {number|string} value
+ * @returns {string}
+ */
 export function formatPrice(value) {
   const n = Number(value)
   if (Number.isNaN(n)) return '—'
   return `\u20B9${n.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
 }
 
+/**
+ * Formats item quantity alongside unit string.
+ * @param {number|string} quantity
+ * @param {string} unit
+ * @returns {string}
+ */
 export function formatQuantity(quantity, unit) {
   const n = Number(quantity)
   const rounded = Number.isInteger(n) ? n : Math.round(n * 100) / 100
   return `${rounded} ${unit || ''}`.trim()
+}
+
+/**
+ * Formats quantity and unit with fallback default if unit missing.
+ * @param {number|string} quantity
+ * @param {string} [unit='unit']
+ * @returns {string}
+ */
+export function formatQuantityWithUnit(quantity, unit = 'unit') {
+  return formatQuantity(quantity, unit)
 }
 
 const UNIT_LABELS = {
@@ -20,9 +41,15 @@ const UNIT_LABELS = {
   dozen: 'dozen',
 }
 
+/**
+ * Translates short unit abbreviations to full readable labels.
+ * @param {string} unit
+ * @returns {string}
+ */
 export function unitLabel(unit) {
   return UNIT_LABELS[unit] || unit
 }
+
 
 export function timeAgo(dateIso) {
   if (!dateIso) return ''
