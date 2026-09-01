@@ -1,3 +1,5 @@
+"""Unit tests for the Pantrio bill parser module."""
+
 import os
 import sys
 
@@ -128,6 +130,14 @@ def test_category_classifier():
     assert classify_category("Unknown Exotic Item") == "Other"
 
 
+def test_new_grocery_item_mappings():
+    assert normalize_item_name("Fresh Paneer") == "Paneer"
+    assert normalize_item_name("Coriander Leaves") == "Coriander"
+    assert normalize_item_name("Ginger Paste") == "Ginger"
+    assert normalize_item_name("Garlic Paste") == "Garlic"
+    assert normalize_item_name("Green Chillies") == "Green Chilli"
+
+
 if __name__ == "__main__":
     print("Running Pantrio Parser Unit Tests...")
     test_mandatory_grocery_receipt_items()
@@ -138,4 +148,7 @@ if __name__ == "__main__":
     print("  [PASS] test_single_line_bill_format")
     test_category_classifier()
     print("  [PASS] test_category_classifier")
+    test_new_grocery_item_mappings()
+    print("  [PASS] test_new_grocery_item_mappings")
     print("ALL PANTRIO PARSER TESTS PASSED SUCCESSFULLY!")
+
