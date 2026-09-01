@@ -4,10 +4,13 @@ import axios from 'axios'
 // Configured via .env -> VITE_API_URL (defaults to local dev server).
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
+export const DEFAULT_TIMEOUT_MS = 180000
+
 const client = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 180000, // OCR can take a few seconds on first run (model warm-up)
+  timeout: DEFAULT_TIMEOUT_MS, // OCR can take a few seconds on first run (model warm-up)
 })
+
 
 /**
  * Custom error shape so the UI can distinguish between:
