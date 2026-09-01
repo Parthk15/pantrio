@@ -17,6 +17,19 @@ class Inventory:
                 "price": item.get("price")
             }
 
+    def get_items_by_category(self, category_name: str) -> dict:
+        """Filters inventory items matching a specific grocery category."""
+        category_lower = category_name.lower()
+        return {
+            name: details
+            for name, details in self.items.items()
+            if details.get("category", "").lower() == category_lower
+        }
+
+    def total_item_count(self) -> int:
+        """Returns the distinct count of inventory items tracked."""
+        return len(self.items)
+
     def get_low_stock(self, thresholds):
         low_stock = {}
 
@@ -29,6 +42,7 @@ class Inventory:
                     }
 
         return low_stock
+
 
     def show_inventory(self):
         print("\n========== PANTRIO INVENTORY ==========\n")
