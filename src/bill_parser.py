@@ -45,8 +45,14 @@ NAME_MAPPINGS = {
     "Yogurt": "Yogurt",
     "Fortune Sunflwr Oil": "Fortune Sunflower Oil",
     "Kellogg's CornFlakes": "Kellogg's Cornflakes",
-    "Kelloggs Cornflakes": "Kellogg's Cornflakes"
+    "Kelloggs Cornflakes": "Kellogg's Cornflakes",
+    "Coriander Leaves": "Coriander",
+    "Ginger Paste": "Ginger",
+    "Garlic Paste": "Garlic",
+    "Green Chillies": "Green Chilli",
+    "Fresh Paneer": "Paneer",
 }
+
 
 
 def normalize_item_name(name):
