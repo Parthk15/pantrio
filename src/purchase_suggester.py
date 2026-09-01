@@ -1,4 +1,5 @@
 def suggest_purchases(inventory, thresholds):
+    """Return a list of items that are below their restock threshold."""
     purchases = []
 
     for name, threshold in thresholds.items():
