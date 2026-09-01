@@ -1,18 +1,22 @@
+from typing import List, Dict, Any
 from recipe_engine import RECIPES
 
 
-def suggest_recipes(inventory):
+def suggest_recipes(inventory) -> List[Dict[str, Any]]:
+    """
+    Evaluates current inventory against recipe catalog.
+    Returns recipe suggestions sorted by completion state and match percentage.
+    """
     suggestions = []
 
     for recipe_name, recipe_data in RECIPES.items():
-
         can_make = True
         missing = []
-
+        matched = []
         ingredients = recipe_data.get("ingredients", recipe_data)
+        total_required = len(ingredients)
 
         for ingredient, required_quantity in ingredients.items():
-
             if ingredient not in inventory.items:
                 can_make = False
                 missing.append(ingredient)
@@ -23,14 +27,23 @@ def suggest_recipes(inventory):
             if available_quantity < required_quantity:
                 can_make = False
                 missing.append(ingredient)
+            else:
+                matched.append(ingredient)
+
+        match_pct = int((len(matched) / total_required) * 100) if total_required > 0 else 0
 
         suggestions.append({
             "recipe": recipe_name,
             "can_make": can_make,
+            "match_percentage": match_pct,
+            "matched": matched,
             "missing": missing
         })
 
+    # Sort suggestions: can_make first, then by match_percentage descending
+    suggestions.sort(key=lambda s: (s["can_make"], s["match_percentage"]), reverse=True)
     return suggestions
+
 
 
 if __name__ == "__main__":
