@@ -2,11 +2,13 @@ from datetime import datetime
 
 
 class CookingHistory:
+    """Tracks recipes cooked and ingredients consumed."""
 
     def __init__(self):
         self.history = []
 
     def add_recipe(self, recipe_name, ingredients):
+        """Record a cooked recipe with its consumed ingredients."""
         record = {
             "recipe": recipe_name,
             "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -16,6 +18,7 @@ class CookingHistory:
         self.history.append(record)
 
     def show_history(self):
+        """Print the full cooking history to stdout."""
 
         print("\n========== COOKING HISTORY ==========\n")
 
